@@ -21,6 +21,19 @@ scaler_path = os.path.join(base_dir, "models", "scaler.pkl")
 model=load_model(model_path)
 scaler=pickle.load(open(scaler_path,'rb'))
 
+
+def make_prediction(input_data):
+    input_data_scaled = scaler.transform(input_data)
+    predictions = model.predict(input_data_scaled)
+    predicted_class = (predictions > 0.5).astype(int)
+
+
+    return predicted_class
+    # if predicted_class[0] == 1:
+    #     return "Real Note"
+    # else:
+    #     return "Fake Note"
+
 #routes
 @app.route("/")
 def index():
@@ -38,8 +51,20 @@ def predict():
         CWTI = float(request.form['CWTI'])
         EI = float(request.form['EI'])
 
-        #
+        #prepare input data for prediction 
+        input_data=np.array([[VWTI,SWTI,CWTI,EI]])
 
+        # Get predictions
+        result=make_prediction(input_data)
+
+        if result==1:
+            output='real'
+        else:
+            output='fake'
+         
+        return render_template('index.html', prediction=output)
+    return render_template('index.html',prediction=None)
+    
 # python main
 if __name__ == "__main__":
     app.run(debug=True)
